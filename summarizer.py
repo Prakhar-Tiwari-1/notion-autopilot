@@ -96,6 +96,9 @@ def build_email(tasks: str) -> str:
     today     = date.today().strftime("%A, %B %d %Y")
     client    = OpenAI(api_key=OPENAI_API_KEY)
 
+    week_start = date.today().strftime("%B %d")
+    week_end   = (date.today() + timedelta(days=6)).strftime("%B %d")
+
     template = f"""\
 You are a personal assistant. Produce a visually structured plain-text email — no markdown, no asterisks, no bold.
 Use only: Unicode box/line characters, emojis, spacing, and indentation for visual structure.
@@ -103,10 +106,10 @@ Today is {today}.
 
 Use EXACTLY this layout:
 
-╔══════════════════════════════════════╗
+
         🧠  DS'S MIND TRACKER
         {today}
-╚══════════════════════════════════════╝
+-------------------------------------
 
   ✦  QUOTE OF THE DAY
 
@@ -145,6 +148,33 @@ Use EXACTLY this layout:
   ⚡  HIGH PRIORITY  ·  NO DEADLINE
   ───────────────────────────────────
   [Same format. Only include if there are tasks here.]
+
+
+══════════════════════════════════════
+
+  🗓  WEEKLY PLAN  ·  {week_start} – {week_end}
+  ──────────────────────────────────────
+  [Based on the tasks above, write a short practical day-by-day plan for this week.
+   3–5 lines max. Focus on what to tackle first, what to batch together, and any deadlines to hit.
+   Be direct and specific — no generic advice. Use this format:]
+
+  Mon – Wed  ·  [what to focus on]
+  Thu – Fri  ·  [what to focus on]
+  Weekend    ·  [anything to wrap up or prep]
+
+
+══════════════════════════════════════
+
+  🎙  WORDS TO CARRY
+  ───────────────────
+  [A short excerpt (3–6 sentences) from a real speech or writing by a well-known world leader,
+   entrepreneur, athlete, philosopher, or artist. Pick a different person every single time —
+   vary across fields and eras. Never repeat the same person twice in a row.
+   Attribute it properly below.]
+
+  "[Speech excerpt here]"
+
+  — [Full Name], [context e.g. Stanford Commencement 2005 / Letter to shareholders 1997]
 
 
 ══════════════════════════════════════
