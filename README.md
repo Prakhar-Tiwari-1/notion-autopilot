@@ -29,11 +29,13 @@ You need a Notion database with at least these properties (the names must match 
 | Property | Type | Notes |
 |----------|------|-------|
 | `Task` | Title | The task name |
-| `Stage` | Select | Used to filter out finished tasks (value: `Finished`) |
+| `Stage` | Select | Finished tasks must be labelled `Finished` |
 | `Priority` | Select | Values used: `Critical`, `High` |
 | `Due Date` | Date | Used for the 14-day lookahead filter |
 | `Category` | Select | Optional grouping shown in the email |
 | `Notes` | Rich text | Extra context attached to a task |
+
+![Notion database](Notion_database.png)
 
 **Notion integration setup:**
 1. Go to [notion.so/my-integrations](https://www.notion.so/my-integrations) and create a new integration
