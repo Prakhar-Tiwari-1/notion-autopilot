@@ -1,43 +1,34 @@
-# 🧠 DS's Mind Tracker — Notion Summarizer
+# Mind Tracker
 
-Automatically emails a visual summary of your Notion task tracker every 2 days.
+Pulls critical and upcoming tasks from a Notion database, summarises them with GPT-4o-mini, and emails a formatted daily brief every two days.
 
-## What it does
+![Email preview](shot.png)
 
-1. Queries the Task Tracker database in Notion
-2. Filters to Critical/High priority tasks + anything due in the next 14 days
-3. Fetches notes and comments for each task
-4. Sends to OpenAI to produce a structured briefing with a unique quote of the day
-5. Emails the summary via Zoho SMTP
+---
 
-## Stack
+## How it works
 
-- Python 3.11
-- Notion API
-- OpenAI API (gpt-4o-mini)
-- Zoho SMTP
-- GitHub Actions (scheduler)
+1. Queries the Notion task database for anything Critical, High priority, or due within the next 14 days
+2. Fetches notes and comments for each task
+3. Passes everything to GPT-4o-mini, which sorts tasks into buckets and writes a practical weekly plan
+4. Renders the output as an HTML email (warm editorial design, Twemoji inline images) with a plain-text fallback
+5. Sends it via Zoho SMTP
 
-## Schedule
+The model supplies only content — all HTML templating stays in Python.
 
-Runs automatically every 2 days at 7:00 AM UTC.
+---
 
 ## Setup
 
-### 1. Clone the repo
+**1. Clone and install**
 
 ```bash
-git clone https://github.com/YOUR_USERNAME/notion-summariser.git
-cd notion-summariser
-```
-
-### 2. Install dependencies
-
-```bash
+git clone https://github.com/YOUR_USERNAME/notion-mind-tracker.git
+cd notion-mind-tracker
 pip install -r requirements.txt
 ```
 
-### 3. Create a `.env` file
+**2. Create a `.env` file**
 
 ```
 NOTION_API_KEY=your_notion_integration_token
@@ -45,18 +36,32 @@ OPENAI_API_KEY=your_openai_key
 ZOHO_API_KEY=your_zoho_app_password
 ```
 
-### 4. Run locally
+**3. Run**
 
 ```bash
 python summarizer.py
 ```
 
-### 5. GitHub Actions secrets
+---
 
-Add these 3 secrets to your repo (Settings → Secrets → Actions):
+## GitHub Actions
 
-| Secret | Value |
-|---|---|
+The workflow fires every two days at 7 AM UTC. Add the three keys above as repository secrets under **Settings → Secrets → Actions**, then push — it runs automatically.
+
+You can also trigger it manually from the **Actions** tab.
+
+| Secret | What it is |
+|--------|------------|
 | `NOTION_API_KEY` | Notion integration token |
 | `OPENAI_API_KEY` | OpenAI API key |
 | `ZOHO_API_KEY` | Zoho app-specific password |
+
+---
+
+## Adapting it
+
+The Notion database ID, email addresses, and task filter are all near the top of `summarizer.py`. The model prompt and bucket definitions are in `build_content()`.
+
+## Stack
+
+Python · Notion API · OpenAI API · Zoho SMTP · GitHub Actions
