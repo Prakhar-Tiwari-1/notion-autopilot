@@ -5,6 +5,9 @@ on:
     - cron: "0 7 */2 * *"   # every 2 days at 7:00 AM UTC
   workflow_dispatch:         # allows manual trigger from GitHub UI
 
+permissions:
+  contents: write   # needed to commit the updated quote_state.json back
+
 jobs:
   summarize:
     runs-on: ubuntu-latest
@@ -27,3 +30,15 @@ jobs:
           ZOHO_API_KEY:   ${{ secrets.ZOHO_API_KEY }}
           NOTION_PAGE_ID: ${{ secrets.NOTION_PAGE_ID }}
         run: python summarizer.py
+
+      - name: Persist quote position
+        run: |
+          if ! git diff --quiet -- quote_state.json; then
+            git config user.name "github-actions[bot]"
+            git config user.email "github-actions[bot]@users.noreply.github.com"
+            git add quote_state.json
+            git commit -m "chore: advance quote position"
+            git push
+          else
+            echo "No change to quote_state.json, skipping commit."
+          fi

@@ -3,6 +3,7 @@ import re
 import json
 import html
 import base64
+import random
 import smtplib
 import requests
 from datetime import date, timedelta
@@ -10,9 +11,13 @@ from email.mime.text import MIMEText
 from email.mime.image import MIMEImage
 from email.mime.multipart import MIMEMultipart
 from openai import OpenAI
+from openpyxl import load_workbook
 from dotenv import load_dotenv
 
 load_dotenv()
+
+QUOTES_FILE       = os.path.join(os.path.dirname(__file__), "quotes.xlsx")
+QUOTE_STATE_FILE  = os.path.join(os.path.dirname(__file__), "quote_state.json")
 
 NOTION_API_KEY   = os.environ["NOTION_API_KEY"]
 OPENAI_API_KEY   = os.environ["OPENAI_API_KEY"]
@@ -97,6 +102,37 @@ def fetch_tasks() -> str:
     return "\n\n".join(tasks)
 
 
+def next_quote() -> dict:
+    """Pull the next quote from quotes.xlsx in a shuffled, non-repeating order.
+
+    quote_state.json tracks the shuffled order and current position so each
+    of the 500 quotes is used exactly once before any repeat. When the order
+    is exhausted (or missing), it's reshuffled and position resets to 0.
+    """
+    wb = load_workbook(QUOTES_FILE, read_only=True)
+    rows = list(wb.active.iter_rows(min_row=2, values_only=True))
+    quotes = [{"text": text, "author": author} for _id, text, author in rows]
+
+    try:
+        with open(QUOTE_STATE_FILE, "r", encoding="utf-8") as f:
+            state = json.load(f)
+    except (FileNotFoundError, json.JSONDecodeError):
+        state = {"order": [], "position": 0}
+
+    order, position = state.get("order", []), state.get("position", 0)
+    if position >= len(order):
+        order = list(range(len(quotes)))
+        random.shuffle(order)
+        position = 0
+
+    quote = quotes[order[position]]
+
+    with open(QUOTE_STATE_FILE, "w", encoding="utf-8") as f:
+        json.dump({"order": order, "position": position + 1}, f)
+
+    return quote
+
+
 def build_content(tasks: str) -> dict:
     today  = date.today().strftime("%A, %B %d %Y")
     client = OpenAI(api_key=OPENAI_API_KEY)
@@ -108,10 +144,6 @@ You decide nothing about presentation — only the content. Today is {today}.
 Return JSON with EXACTLY this shape:
 
 {{
-  "quote": {{
-    "text": "A unique, fresh quote — philosophical, from a book, person, or poem. Different every single time, never repeat.",
-    "author": "Author or source"
-  }},
   "critical": [
     {{
       "name": "Task name",
@@ -580,6 +612,7 @@ if __name__ == "__main__":
 
     print("Building email...")
     data = build_content(tasks)
+    data["quote"] = next_quote()
     html_body, emoji_images = render_html(data)
     text_body = render_text(data)
 
